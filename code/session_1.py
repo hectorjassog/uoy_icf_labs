@@ -23,7 +23,7 @@ def super_gaussian(x, *params):
     return y0 + A*np.exp(-((x-x0)/(np.sqrt(2)*c))**n)
 
 n = 0
-ns = [4, 6]
+ns = [2, 4, 6, 8]
 guess = [5000, 1, 0.5, 28000]
 print ("Our initial guess is: {0}".format(guess))
 file_names = ["vertical", "horizontal", "diagonal_top_left_to_bottom_right", "diagonal_top_right_to_bottom_left"]
@@ -32,7 +32,9 @@ calculated_mse_values_sg = []
 # matrix to store the values to be plotted
 mse_for_n_file_name = np.zeros((len(ns), len(file_names)))
 fig, axis = plt.subplots(len(ns), len(file_names))
-
+diameter_output = True
+mse_output = False
+plot_raw_data = False
 def delta_x(c, n=6):
     return np.sqrt(2) * c * (np.log(2))**(1/n)
 
@@ -56,18 +58,20 @@ for idxn, n_value in enumerate(ns):
     core_diameters = []
     core_diameters_error = []
 
-    if n_value==6:    
+    if n==6:    
+        print ("N value used: {}".format(n_value))
         for idxf, file_name in enumerate(file_names):
 
-            xdata, ydata = icf.load_2col("../data/session1/{0}.csv".format(file_name))
+            xdata, ydata = icf.load_2col("../data/session1/image2/{0}.csv".format(file_name))
 
             xdata *= 60.0/1000.0
-
-            # plt.plot(xdata, ydata)
-            # plt.title("Lineout: {}".format(file_name))
-            # plt.xlabel("Position - mm")
-            # plt.ylabel("Brightness units")
-            # plt.show()
+            if plot_raw_data:
+                xdata /= 1000.0*60.0
+                plt.plot(xdata, ydata)
+                plt.title("Lineout: {}".format(file_name))
+                plt.xlabel("Position - mm")
+                plt.ylabel("Brightness units")
+                plt.show()
 
 
             popt, pcov = curve_fit(gaussian, xdata, ydata, p0=guess)
@@ -94,8 +98,8 @@ for idxn, n_value in enumerate(ns):
             mse_for_n_file_name[idxn][idxf] = mse_sg
 
             # plt.plot(n_value, mse_values_sg[0], label=str(file_name))
-            # print (file_name)
-            # print (mse_values_sg[0])
+            print (file_name)
+            print (mse_values_sg[0])
 
             axis[idxn, idxf].plot(xdata, ydata, label="data")
             axis[idxn, idxf].plot(xdata, yfit_sg, label="super gaussian")
@@ -131,28 +135,30 @@ for idxn, n_value in enumerate(ns):
             # 6 micrometer to mm is 0.006
             core_diameter_error = np.sqrt((diameter_error**2) + (0.006))
             core_diameters_error.append(core_diameter_error)
-
-            print ("The value of the diameter for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, core_diameter, core_diameter_error))
-            print ("The value of the radius for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, core_diameter/2, core_diameter_error/2))
+            if diameter_output:
+                print ("The value of the diameter for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, core_diameter, core_diameter_error))
+                print ("The value of the radius for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, core_diameter/2, core_diameter_error/2))
 
         n_mse_sg = np.mean(mse_values_sg)
-        # print ("For the super gaussian with n = {0}, the average MSE = {1}".format(n_value, n_mse_sg))
+        if mse_output:
+            print ("For the super gaussian with n = {0}, the average MSE = {1}".format(n_value, n_mse_sg))
         calculated_mse_values_sg.append(n_mse_sg)
         avg_diameter_size = np.mean(core_diameters)
         avg_diameter_error = np.mean(core_diameters_error)
-        print ("The average diameter for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size, avg_diameter_error))
-        print ("The average radius for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size/2, avg_diameter_error/2))
+        if diameter_output:
+            print ("The average diameter for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size, avg_diameter_error))
+            print ("The average radius for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size/2, avg_diameter_error/2))
     else: 
         pass
 
+if mse_output:
+    print ("For the gaussian, the MSE = {1}".format(n_value, np.mean(mse_values)))
+    plt.show()
 
-# print ("For the gaussian, the MSE = {1}".format(n_value, np.mean(mse_values)))
-# plt.show()
-
-# plt.plot(ns, mse_for_n_file_name)
-# plt.xlabel("Values of n")
-# plt.ylabel("Mean Squared Error (MSE)")
-# plt.show()
+    plt.plot(ns, mse_for_n_file_name)
+    plt.xlabel("Values of n")
+    plt.ylabel("Mean Squared Error (MSE)")
+    plt.show()
 # icf.fit_plot(xdata, ydata, yfit)
 
 # capsule 6
