@@ -31,14 +31,17 @@ mse_values = []
 calculated_mse_values_sg = []
 # matrix to store the values to be plotted
 mse_for_n_file_name = np.zeros((len(ns), len(file_names)))
+fig, axis = plt.subplots(len(ns), len(file_names))
 for idxn, n_value in enumerate(ns):
+
+
+
     n = n_value
 
     mse_values_sg = []
 
 
     for idxf, file_name in enumerate(file_names):
-        #if file_name == "horizontal":
         if 1==1:    
             xdata, ydata = icf.load_2col("../data/session1/{0}.csv".format(file_name))
 
@@ -84,8 +87,13 @@ for idxn, n_value in enumerate(ns):
             # print (file_name)
             # print (mse_values_sg[0])
 
+            axis[idxn, idxf].plot(xdata, ydata, label="data")
+            axis[idxn, idxf].plot(xdata, yfit_sg, label="super gaussian")
+            axis[idxn, idxf].legend(loc="best")
+            axis[idxn, idxf].set_title(file_name)
+            axis[idxn, idxf].set_ylabel("MSE for n={0}".format(n_value))
+
             # plt.plot(xdata, ydata, label="data")
-            # plt.plot(xdata, yfit, label="gaussian")
             # plt.plot(xdata, yfit_sg, label="super gaussian")
             # plt.legend(loc="best")
             # plt.show()
@@ -96,10 +104,11 @@ for idxn, n_value in enumerate(ns):
     calculated_mse_values_sg.append(n_mse_sg)
 
 print ("For the gaussian, the MSE = {1}".format(n_value, np.mean(mse_values)))
-
-plt.plot(ns, mse_for_n_file_name)
-plt.xlabel("Values of n")
-plt.ylabel("Mean Squared Error (MSE)")
 plt.show()
+
+# plt.plot(ns, mse_for_n_file_name)
+# plt.xlabel("Values of n")
+# plt.ylabel("Mean Squared Error (MSE)")
+# plt.show()
 # icf.fit_plot(xdata, ydata, yfit)
 
