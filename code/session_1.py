@@ -37,7 +37,12 @@ def delta_x(c, n=6):
     return np.sqrt(2) * c * (np.log(2))**(1/n)
 
 def psf_function(pinhole_s=15, dig_s=60, micro_s=27):
-    # nanometers
+    # input is in micrometers
+    # output has to be in mm
+    pinhole_s /= 1000
+    dig_s /= 1000
+    micro_s /= 1000
+    # micro_s has a +- 6 micrometer error
     return np.sqrt((pinhole_s**2) + (micro_s**2) + (dig_s**2))
 psf = psf_function()
 
@@ -48,12 +53,12 @@ for idxn, n_value in enumerate(ns):
     n = n_value
 
     mse_values_sg = []
-    diameters = []
-    diameters_error = []
+    core_diameters = []
+    core_diameters_error = []
 
+    if n_value==6:    
+        for idxf, file_name in enumerate(file_names):
 
-    for idxf, file_name in enumerate(file_names):
-        if 1==1:    
             xdata, ydata = icf.load_2col("../data/session1/{0}.csv".format(file_name))
 
             xdata *= 60.0/1000.0
@@ -85,7 +90,7 @@ for idxn, n_value in enumerate(ns):
             mse_values_sg.append(mse_sg)
 
 
-            print ("For super gaussian with n {0} and for file {1} is: {2}".format(n, file_name, mse_sg))
+            # print ("For super gaussian with n {0} and for file {1}, the MSE is: {2}".format(n, file_name, mse_sg))
             mse_for_n_file_name[idxn][idxf] = mse_sg
 
             # plt.plot(n_value, mse_values_sg[0], label=str(file_name))
@@ -117,22 +122,27 @@ for idxn, n_value in enumerate(ns):
             c_parameter_error_pctg = c_parameter_error / c_parameter
             delta_x_error = delta_x_value * c_parameter_error_pctg
             # multiply radius times two to get the diameter
-            diameter = delta_x_value * 2
-            diameters.append(diameter)
-            diameter_error = delta_x_error * 2
-            diameters_error.append(diameter_error)
+            diameter_prescale = delta_x_value * 2
+            diameter = diameter_prescale / 3.5
+            core_diameter = np.sqrt((diameter**2) + (psf**2))
+            core_diameters.append(core_diameter)
+            diameter_error_prescale = delta_x_error * 2
+            diameter_error = diameter_error_prescale / 3.5
+            # 6 micrometer to mm is 0.006
+            core_diameter_error = np.sqrt((diameter_error**2) + (0.006))
+            core_diameters_error.append(core_diameter_error)
 
-            print ("The value of the diameter for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, diameter, diameter_error))
+            print ("The value of the diameter for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, core_diameter, core_diameter_error))
 
+        n_mse_sg = np.mean(mse_values_sg)
+        # print ("For the super gaussian with n = {0}, the average MSE = {1}".format(n_value, n_mse_sg))
+        calculated_mse_values_sg.append(n_mse_sg)
+        avg_diameter_size = np.mean(core_diameters)
+        avg_diameter_error = np.mean(core_diameters_error)
+        print ("The average diameter for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size, avg_diameter_error))
+    else: 
+        pass
 
-        else: 
-            pass
-    n_mse_sg = np.mean(mse_values_sg)
-    print ("For the super gaussian with n = {0}, the average MSE = {1}".format(n_value, n_mse_sg))
-    calculated_mse_values_sg.append(n_mse_sg)
-    avg_diameter_size = np.mean(diameters)
-    avg_diameter_error = np.mean(diameters_error)
-    print ("The average diameter for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size, avg_diameter_error))
 
 # print ("For the gaussian, the MSE = {1}".format(n_value, np.mean(mse_values)))
 # plt.show()
