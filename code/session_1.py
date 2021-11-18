@@ -32,13 +32,24 @@ calculated_mse_values_sg = []
 # matrix to store the values to be plotted
 mse_for_n_file_name = np.zeros((len(ns), len(file_names)))
 fig, axis = plt.subplots(len(ns), len(file_names))
+
+def delta_x(c, n=6):
+    return np.sqrt(2) * c * (np.log(2))**(1/n)
+
+def psf_function(pinhole_s=15, dig_s=60, micro_s=27):
+    # nanometers
+    return np.sqrt((pinhole_s**2) + (micro_s**2) + (dig_s**2))
+psf = psf_function()
+
 for idxn, n_value in enumerate(ns):
 
-
+    delta_x_values = []
 
     n = n_value
 
     mse_values_sg = []
+    diameters = []
+    diameters_error = []
 
 
     for idxf, file_name in enumerate(file_names):
@@ -62,12 +73,6 @@ for idxn, n_value in enumerate(ns):
 
             # print ("Fit parameters gaussian: {0}".format(popt))
             # print ("Fit standard deviations gaussian: {0}".format(np.sqrt(np.diag(pcov))))
-
-            # for i in range(len(popt_sg)):
-            #     print ("Parameter {0}: {1} +/- {2}".format(i, popt_sg[i], np.sqrt(pcov_sg[i][i])))
-
-            # print ("Fit parameters super gaussian: {0}".format(popt_sg))
-            # print ("Fit standard deviations super gaussian: {0}".format(np.sqrt(np.diag(pcov_sg))))
 
             yfit = gaussian(xdata, *popt)
             yfit_sg = super_gaussian(xdata, *popt_sg)
@@ -97,18 +102,46 @@ for idxn, n_value in enumerate(ns):
             # plt.plot(xdata, yfit_sg, label="super gaussian")
             # plt.legend(loc="best")
             # plt.show()
+
+
+            # for i in range(len(popt_sg)):
+            #     print ("Parameter {0}: {1} +/- {2}".format(i, popt_sg[i], np.sqrt(pcov_sg[i][i])))
+
+            # print ("Fit parameters super gaussian: {0}".format(popt_sg))
+            # print ("Fit standard deviations super gaussian: {0}".format(np.sqrt(np.diag(pcov_sg))))
+            # calculating delta_x
+            c_parameter = popt_sg[2]
+            c_parameter_error = np.sqrt(pcov_sg[2][2])
+            delta_x_value = delta_x(c_parameter)
+            delta_x_values.append(delta_x_value)
+            c_parameter_error_pctg = c_parameter_error / c_parameter
+            delta_x_error = delta_x_value * c_parameter_error_pctg
+            # multiply radius times two to get the diameter
+            diameter = delta_x_value * 2
+            diameters.append(diameter)
+            diameter_error = delta_x_error * 2
+            diameters_error.append(diameter_error)
+
+            print ("The value of the diameter for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, diameter, diameter_error))
+
+
         else: 
             pass
     n_mse_sg = np.mean(mse_values_sg)
     print ("For the super gaussian with n = {0}, the average MSE = {1}".format(n_value, n_mse_sg))
     calculated_mse_values_sg.append(n_mse_sg)
+    avg_diameter_size = np.mean(diameters)
+    avg_diameter_error = np.mean(diameters_error)
+    print ("The average diameter for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size, avg_diameter_error))
 
-print ("For the gaussian, the MSE = {1}".format(n_value, np.mean(mse_values)))
-plt.show()
+# print ("For the gaussian, the MSE = {1}".format(n_value, np.mean(mse_values)))
+# plt.show()
 
 # plt.plot(ns, mse_for_n_file_name)
 # plt.xlabel("Values of n")
 # plt.ylabel("Mean Squared Error (MSE)")
 # plt.show()
 # icf.fit_plot(xdata, ydata, yfit)
+
+# capsule 6
 
