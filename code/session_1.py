@@ -133,6 +133,7 @@ for idxn, n_value in enumerate(ns):
             core_diameters_error.append(core_diameter_error)
 
             print ("The value of the diameter for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, core_diameter, core_diameter_error))
+            print ("The value of the radius for file {0} and C = {1} is: {2} +- {3} mm".format(file_name, c_parameter, core_diameter/2, core_diameter_error/2))
 
         n_mse_sg = np.mean(mse_values_sg)
         # print ("For the super gaussian with n = {0}, the average MSE = {1}".format(n_value, n_mse_sg))
@@ -140,6 +141,7 @@ for idxn, n_value in enumerate(ns):
         avg_diameter_size = np.mean(core_diameters)
         avg_diameter_error = np.mean(core_diameters_error)
         print ("The average diameter for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size, avg_diameter_error))
+        print ("The average radius for all the calculated C parameters for the 4 different files is: {} +- {} mm".format(avg_diameter_size/2, avg_diameter_error/2))
     else: 
         pass
 
