@@ -19,10 +19,10 @@ density_without_atm = density * 101325
 
 
 
-diameter_data = pd.read_csv("../data/capsuledata.csv")
+diameter_data = pd.read_csv("../data/capsuledata_fwhm.csv")
 diameter_data.sort_values(by=["Time delay (ns)"], inplace=True)
 
-print (diameter_data)
+# print (diameter_data)
 
 # plt.plot(diameter_data["Time delay (ns)"], diameter_data["Diameter of capsule (um)"])
 # plt.title("Ungrouped")
@@ -32,7 +32,7 @@ print (diameter_data)
 
 grouped_data = diameter_data.groupby(["Time delay (ns)"]).mean()
 
-print (grouped_data)
+# print (grouped_data)
 
 grouped_data.to_csv("../data/grouped_capsuledata.csv")
 grouped_data = pd.read_csv("../data/grouped_capsuledata.csv")
@@ -44,6 +44,7 @@ initial_volume_0 = get_volume(189) # +- 39 microns
 print ("volume: "+str(initial_volume_0))
 initial_pressure_0 = 50
 grouped_data["delta_density"] = grouped_data["volume (um^3)"] / initial_volume_0
+grouped_data["delta_density"] = grouped_data["volume (um^3)"] / (grouped_data["volume (um^3)"] - grouped_data["volume (um^3)"].diff())
 grouped_data["density (kg / m^3)"] = initial_density * grouped_data["delta_density"]
 grouped_data["delta_pressure"] = (
     (
@@ -72,28 +73,28 @@ grouped_data["pressure errors"] = grouped_data["diameter error pctg"] * grouped_
 
 
 
-# plt.plot(grouped_data["Time delay (ns)"], grouped_data["Diameter of capsule (um)"], label="Diameter of capsule (um)")
-# plt.plot(grouped_data["Time delay (ns)"], grouped_data["density (um^-3)"], label="density (um^-3)")
-# plt.legend(loc="best")
-# plt.title("Grouped")
-# plt.xlabel("Time delay (ns)")
-# plt.ylabel("Diameter of capsule (um)")
-# plt.show()
+plt.plot(grouped_data["Time delay (ns)"], grouped_data["Diameter of capsule (um)"], label="Diameter of capsule (um)")
+# plt.plot(grouped_data["Time delay (ns)"], grouped_data["density (kg / m^3)"], label="density (kg / m^3)")
+plt.legend(loc="best")
+plt.title("Grouped")
+plt.xlabel("Time delay (ns)")
+plt.ylabel("Diameter of capsule (um)")
+plt.show()
 
-print (grouped_data["volume errors"])
+print (grouped_data[["pressure", "pressure errors", "delta_density", "volume (um^3)", "density (kg / m^3)", "Diameter of capsule (um)",]])
 print (initial_density)
 
-# plt.plot(grouped_data["Time delay (ns)"], grouped_data["delta_density"], label="density ratio")
-# plt.plot(grouped_data["Time delay (ns)"], grouped_data["delta_pressure"], label="pressure ratio")
-# plt.legend(loc="best")
-# plt.title("These ratios are with respect to the initial values")
-# plt.xlabel("Time delay (ns)")
-# plt.ylabel("ratio")
-# plt.show()
+plt.plot(grouped_data["Time delay (ns)"], grouped_data["delta_density"], label="density ratio")
+plt.plot(grouped_data["Time delay (ns)"], grouped_data["delta_pressure"], label="pressure ratio")
+plt.legend(loc="best")
+plt.title("These ratios are with respect to the initial values")
+plt.xlabel("Time delay (ns)")
+plt.ylabel("ratio")
+plt.show()
 
 
 plt.plot(grouped_data["Time delay (ns)"], grouped_data["pressure"], label="pressure (atm)")
-plt.plot(grouped_data["Time delay (ns)"], grouped_data["density (kg / m^3)"], label="density (kg / m^3)")
+# plt.plot(grouped_data["Time delay (ns)"], grouped_data["density (kg / m^3)"], label="density (kg / m^3)")
 plt.errorbar(grouped_data["Time delay (ns)"], grouped_data["pressure"], yerr=grouped_data["pressure errors"], fmt='o')
 plt.legend(loc="best")
 plt.xlabel("Time delay (ns)")
